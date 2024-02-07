@@ -1,44 +1,40 @@
-name: Check Feature Branch Origin
+name: Check Commits
 
 on:
   pull_request:
     types:
       - opened
       - synchronize
-    branches:
-      - 'vnext/*'
 
 jobs:
-  check-branch-origin:
+  check-commits:
     runs-on: ubuntu-latest
-
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: git fetch
-        run: git fetch
-
-      - name: Run Git Command
-        id: git_output
+      - name: Get list of vnext branches
+        id: get-branches
         run: |
-          MY_COMMAND=$(git show-branch | grep '*' | grep -v "$(git rev-parse --abbrev-ref HEAD)" | head -n1 | sed 's/.*\[\(.*\)\].*/\1/' | sed 's/[\^~].*//')
-          echo "MY_COMMAND=$MY_COMMAND" >> $GITHUB_ENV
+          branches=$(git branch -r | grep 'origin/vnext/*' | sed 's/origin\///')
+          echo "::set-output name=branches::$branches"
 
-      - name: Echo Command
-        run: echo "My Git command is $MY_COMMAND"
-        
-      - name: Get common ancestor commit
-        id: merge-base
-        run: echo "COMMIT_HASH=$(git merge-base origin/${{ github.base_ref }} origin/${{ github.head_ref }})" >> $GITHUB_ENV
-
-      - name: Verify branch origin
+      - name: Check commit hashes
+        id: check-commits
         run: |
-          common_ancestor_commit="$COMMIT_HASH"
-          first_commit_in_feature_branch=$(git rev-list --max-parents=0 HEAD)
+          branches="${{ steps.get-branches.outputs.branches }}"
+          commit_hashes=$(git log --pretty=format:"%H" ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
+          for hash in $commit_hashes; do
+            for branch in $branches; do
+              if git merge-base --is-ancestor $hash origin/$branch; then
+                echo "Error: Commit hash $hash found in branch $branch"
+                exit 1
+              fi
+            done
+          done
+          echo "All commit hashes are valid."
 
-          if [ "$common_ancestor_commit" != "$first_commit_in_feature_branch" ]; then
-            echo "Error: Feature branch was not created from master."
-            exit 1
-          fi
+      - name: Echo success message
+        if: steps.check-commits.outcome == 'success'
+        run: echo "Workflow completed successfully."
