@@ -1,31 +1,47 @@
-name: Check Commits
+name: Block vNext merges into develoop
 
 on:
   pull_request:
+    branches:    
+      - develop
     types:
       - opened
       - synchronize
-    branches:
-      - develop
 
 jobs:
   check-commits:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check if target branch contains 'feature'
+        id: check-feature-branch
+        run: |
+          target_branch=$(echo "${{ github.event.pull_request.head.ref }}" | tr '[:upper:]' '[:lower:]')
+          if [[ $target_branch == *"feature"* ]]; then
+            echo "Target branch $target_branch contains 'feature'. Proceeding with checks."
+            echo "FEATURE_BRANCH=true" >> $GITHUB_ENV
+          else
+            echo "Target branch $target_branch does not contain 'feature'. Exiting workflow."
+            echo "FEATURE_BRANCH=false" >> $GITHUB_ENV
+          fi
+
       - name: Checkout code
+        if: env.FEATURE_BRANCH == 'true'
         uses: actions/checkout@v2
 
       - name: fetch
+        if: env.FEATURE_BRANCH == 'true'
         run: git fetch
 
       - name: Get list of vnext branches
+        if: env.FEATURE_BRANCH == 'true'
         id: get-branches
         run: |
           branches=$(git branch -r | grep 'origin/vnext/*' | sed 's/origin\///')
           echo "::set-output name=branches::$branches"
 
       - name: Check commit hashes
+        if: env.FEATURE_BRANCH == 'true'
         id: check-commits
         run: |
           branches="${{ steps.get-branches.outputs.branches }}"
@@ -34,13 +50,9 @@ jobs:
             for branch in $branches; do
               echo "Checking: $hash in $branch"
               if git merge-base --is-ancestor $hash origin/$branch; then
-                echo "Error: Commit hash $hash found in branch $branch"
+                echo "Error: Commit hash $hash found in branch $branch It's extremely likely this merge is not meant to happen and you have the wrong branches picked in the pull request."
                 exit 1
               fi
             done
           done
           echo "All commit hashes are valid."
-
-      - name: Echo success message
-        if: steps.check-commits.outcome == 'success'
-        run: echo "Workflow completed successfully."
