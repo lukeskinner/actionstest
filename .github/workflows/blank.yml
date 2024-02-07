@@ -16,7 +16,7 @@ jobs:
 
       - name: Get common ancestor commit
         id: merge-base
-        run: echo "::set-output name=commit::$(git merge-base ${{ github.base_ref }} ${{ github.head_ref }})"
+        run: echo "::set-output name=commit::$(git merge-base origin/${{ github.base_ref }} origin/${{ github.head_ref }})"
 
       - name: Verify branch origin
         run: |
