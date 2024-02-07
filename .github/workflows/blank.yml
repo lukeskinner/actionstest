@@ -1,4 +1,4 @@
-name: Check Commits on develop
+name: Block vNext merges into develoop
 
 on:
   pull_request:
@@ -10,9 +10,15 @@ on:
 
 jobs:
   check-commits:
-    runs-on: ubuntu-latest
+    runs-on: ils
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: fetch
+        run: git fetch
+
       - name: Check if target branch contains 'feature'
         run: |
           target_branch=$(echo "${{ github.event.pull_request.base.ref }}" | tr '[:upper:]' '[:lower:]')
@@ -22,15 +28,6 @@ jobs:
             echo "Target branch does not contain 'feature'. Exiting workflow."
             exit 0
           fi
-    
-      - name: fetch
-        run: git fetch
-
-      - name: swpa
-        run: git swap ${{ github.event.pull_request.head.sha }}
-
-      - name: t
-        run: echo "${{ github.event.pull_request.head.sha }}"
 
       - name: Get list of vnext branches
         id: get-branches
