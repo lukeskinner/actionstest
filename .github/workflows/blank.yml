@@ -25,7 +25,7 @@ jobs:
         run: echo "MY_COMMAND=$MY_COMMAND" >> $GITHUB_ENV
 
       - name: Echo Command
-        run: echo "My Git command is: $MY_COMMAND"
+        run: echo "$MY_COMMAND"
         
       - name: Get common ancestor commit
         id: merge-base
