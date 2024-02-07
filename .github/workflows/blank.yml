@@ -21,12 +21,7 @@ jobs:
         
       - name: Get common ancestor commit 1
         id: merge-base2
-        run: git show-branch -a \
-              | sed "s/].*//" \
-              | grep "\*" \
-              | grep -v "$(git rev-parse --abbrev-ref HEAD)" \
-              | head -n1 \
-              | sed "s/^.*\[//"
+        run: git show-branch -a | sed "s/].*//"   | grep "\*"  | grep -v "$(git rev-parse --abbrev-ref HEAD)"   | head -n1  | sed "s/^.*\[//"
 
       - name: Get common ancestor commit
         id: merge-base
