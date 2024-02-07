@@ -10,7 +10,7 @@ on:
 
 jobs:
   check-commits:
-    runs-on: ubuntu-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
