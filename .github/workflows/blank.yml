@@ -1,29 +1,46 @@
-name: Check Feature Branch Origin
+name: Check Commits
 
 on:
   pull_request:
     types:
       - opened
       - synchronize
+    branches:
+      - develop
 
 jobs:
-  check-branch-origin:
+  check-commits:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Get common ancestor commit
-        id: merge-base
-        run: echo "::set-output name=commit::$(git merge-base ${{ github.base_ref }} ${{ github.head_ref }})"
+      - name: fetch
+        run: git fetch
 
-      - name: Verify branch origin
+      - name: Get list of vnext branches
+        id: get-branches
         run: |
-          common_ancestor_commit="${{ steps.merge-base.outputs.commit }}"
-          first_commit_in_feature_branch=$(git rev-list --max-parents=0 HEAD)
+          branches=$(git branch -r | grep 'origin/vnext/*' | sed 's/origin\///')
+          echo "::set-output name=branches::$branches"
 
-          if [ "$common_ancestor_commit" != "$first_commit_in_feature_branch" ]; then
-            echo "Error: Feature branch was not created from master."
-            exit 1
-          fi
+      - name: Check commit hashes
+        id: check-commits
+        run: |
+          branches="${{ steps.get-branches.outputs.branches }}"
+          commit_hashes=$(git log --pretty=format:"%H" ${{ github.event.pull_request.base.sha }}^..${{ github.event.pull_request.head.sha }})
+          for hash in $commit_hashes; do
+            for branch in $branches; do
+              echo "Checking: $hash in $branch"
+              if git merge-base --is-ancestor $hash origin/$branch; then
+                echo "Error: Commit hash $hash found in branch $branch"
+                exit 1
+              fi
+            done
+          done
+          echo "All commit hashes are valid."
+
+      - name: Echo success message
+        if: steps.check-commits.outcome == 'success'
+        run: echo "Workflow completed successfully."
