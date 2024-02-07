@@ -1,9 +1,9 @@
-name: Check Commits
+name: Check Commits1
 
 on:
   pull_request:
     branches:    
-      - develop
+      - master
     types:
       - opened
       - synchronize
