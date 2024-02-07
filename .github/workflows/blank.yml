@@ -25,7 +25,7 @@ jobs:
           if [[ $target_branch == *"feature"* ]]; then
             echo "Target branch contains 'feature'. Proceeding with checks."
           else
-            echo "Target branch does not contain 'feature'. Exiting workflow."
+            echo "Target branch $target_branch does not contain 'feature'. Exiting workflow."
             exit 0
           fi
 
