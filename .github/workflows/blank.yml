@@ -10,7 +10,7 @@ on:
 
 jobs:
   check-commits:
-    runs-on: ils
+    runs-on: ubuntu-hosted
 
     steps:
       - name: Checkout code
