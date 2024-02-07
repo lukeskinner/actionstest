@@ -13,11 +13,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
       - name: fetch
         run: git fetch
+
+      - name: swpa
+        run: git swap ${{ github.event.pull_request.head.sha }}
+
+      - name: t
+        run: echo "${{ github.event.pull_request.head.sha }}"
 
       - name: Get list of vnext branches
         id: get-branches
