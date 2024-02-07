@@ -21,7 +21,7 @@ jobs:
 
       - name: Get common ancestor commit
         id: merge-base
-        run: echo "COMMIT_HASH=$(git merge-base 'origin/${{ github.base_ref }} origin/${{ github.head_ref }})" >> $GITHUB_ENV
+        run: echo "COMMIT_HASH=$(git merge-base origin/${{ github.base_ref }} origin/${{ github.head_ref }})" >> $GITHUB_ENV
 
       - name: Verify branch origin
         run: |
