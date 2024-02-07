@@ -13,6 +13,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check if target branch contains 'feature'
+        run: |
+          target_branch=$(echo "${{ github.event.pull_request.base.ref }}" | tr '[:upper:]' '[:lower:]')
+          if [[ $target_branch == *"feature"* ]]; then
+            echo "Target branch contains 'feature'. Proceeding with checks."
+          else
+            echo "Target branch does not contain 'feature'. Exiting workflow."
+            exit 0
+          fi
+    
       - name: fetch
         run: git fetch
 
